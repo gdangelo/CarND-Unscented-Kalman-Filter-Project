@@ -129,7 +129,13 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     *  Update
     ****************************************************************************/
 
-   // TODO
+   if(meas_package.sensor_type_ == MeasurementPackage::LASER) {
+     UpdateLidar(meas_package);
+   }
+
+   if(meas_package.sensor_type_ == MeasurementPackage::RADAR) {
+     UpdateRadar(meas_package);
+   }
 }
 
 /**
@@ -237,12 +243,36 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
  * @param {MeasurementPackage} meas_package
  */
 void UKF::UpdateRadar(MeasurementPackage meas_package) {
-  /**
-  TODO:
+  // Set measurement dimension, radar can measure r, phi, and r_dot
+  int n_z = 3;
 
-  Complete this function! Use radar data to update the belief about the object's
-  position. Modify the state vector, x_, and covariance, P_.
+  // Create matrix for sigma points in measurement space
+  MatrixXd Zsig = MatrixXd(n_z, 2 * n_aug_ + 1);
 
-  You'll also need to calculate the radar NIS.
-  */
+  // Mean predicted measurement
+  VectorXd z_pred = VectorXd(n_z);
+
+  // Measurement covariance matrix S
+  MatrixXd S = MatrixXd(n_z,n_z);
+
+  // Transform sigma points into measurement space
+  for(int i = 0; i < 2 * n_aug_ + 1; i++) {
+    double px = Xsig_pred_(0, i);
+    double py = Xsig_pred_(1, i);
+    double v = Xsig_pred_(2, i);
+    double phi = Xsig_pred_(3, i);
+    double phi_dot = Xsig_pred_(4, i);
+
+    double ro = sqrt(px*px + py*py);
+    double theta = atan2(py, px);
+    double ro_dot;
+    if(ro == 0) {
+      ro_dot = 0;
+    }
+    else {
+      ro_dot = (px*cos(phi)*v + py*sin(phi)*v) / ro;
+    }
+
+    Zsig.col(i) << ro, theta, ro_dot;
+  }
 }
