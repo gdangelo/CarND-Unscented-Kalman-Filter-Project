@@ -71,6 +71,9 @@ UKF::UKF() {
 
   // Set Sigma points matrix
   Xsig_pred_ = MatrixXd(n_aug_, 2 * n_aug_ + 1);
+
+  // Set weights
+  weights_ = VectorXd(2 * n_aug_ + 1);
 }
 
 UKF::~UKF() {}
@@ -191,6 +194,26 @@ void UKF::Prediction(double delta_t) {
     double phi_dot_pred = phi_dot + delta_t*nu_phi;
 
     Xsig_pred_.col(i) << px_pred, py_pred, v_pred, phi_pred, phi_dot_pred;
+  }
+
+  /*
+   * 3. Predict state mean and state covariance matrix
+  */
+
+  // Set weights
+  weights_(0) = lambda_ / (lambda_ + n_aug_);
+  for(int i = 1; i < 2 * n_aug_ + 1; i++) {
+    weights_(i) = 1 / (2*(lambda_ + n_aug_));
+  }
+
+  // Predict state mean
+  for(int i = 0; i < 2 * n_aug_ + 1; i++) {
+    x_ += weights_(i) * Xsig_pred_.col(i);
+  }
+
+  // Predict state covariance matrix
+  for(int i = 0; i < 2 * n_aug_ + 1; i++) {
+    P_ += weights_(i) * (Xsig_pred_.col(i) - x_) * (Xsig_pred_.col(i) - x_).transpose();
   }
 }
 
