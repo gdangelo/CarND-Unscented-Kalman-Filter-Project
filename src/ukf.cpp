@@ -275,4 +275,21 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
 
     Zsig.col(i) << ro, theta, ro_dot;
   }
+
+  // Calculate mean predicted measurement
+  for(int i = 0; i < 2 * n_aug_ + 1; i++) {
+    z_pred += weights_(i) * Zsig.col(i);
+  }
+
+  // Calculate innovation covariance matrix S
+  MatrixXd R = MatrixXd(3,3);
+  R(0, 0) = std_radr_*std_radr_;
+  R(1, 1) = std_radphi_*std_radphi_;
+  R(2, 2) = std_radrd_*std_radrd_;
+
+  for(int i = 0; i < 2 * n_aug_ + 1; i++) {
+    S += weights_(i) * (Zsig.col(i) - z_pred) * (Zsig.col(i) - z_pred).transpose();
+  }
+
+  S += R;
 }
