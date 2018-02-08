@@ -163,6 +163,35 @@ void UKF::Prediction(double delta_t) {
     Xsig_aug.col(i+1) = x_aug + sqrt(lambda_ + n_x_)*A.col(i);
     Xsig_aug.col(i+1+n_aug_) = x_aug - sqrt(lambda_ + n_x_)*A.col(i);
   }
+
+  /*
+   * 2. Predict sigma points using unscented transform
+  */
+
+  for(int i = 0; i < 2 * n_aug_ + 1; i++) {
+    double px = Xsig_aug(0, i);
+    double py = Xsig_aug(1, i);
+    double v = Xsig_aug(2, i);
+    double phi = Xsig_aug(3, i);
+    double phi_dot = Xsig_aug(4, i);
+    double nu_a = Xsig_aug(5, i);
+    double nu_phi = Xsig_aug(6, i);
+
+    double px_pred, py_pred;
+    if(phi_dot == 0) {
+      px_pred = px + v*cos(phi)*delta_t;
+      py_pred = py + v*sin(phi)*delta_t;
+    }
+
+    px_pred += 0.5 * delta_t*delta_t * cos(phi) * nu_a;
+    py_pred += 0.5 * delta_t*delta_t * sin(phi) * nu_a;
+
+    double v_pred = v + delta_t * nu_a;
+    double phi_pred = phi + phi_dot*delta_t + 0.5 * delta_t*delta_t*nu_phi;
+    double phi_dot_pred = phi_dot + delta_t*nu_phi;
+
+    Xsig_pred_.col(i) << px_pred, py_pred, v_pred, phi_pred, phi_dot_pred;
+  }
 }
 
 /**
