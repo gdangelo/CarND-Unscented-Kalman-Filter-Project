@@ -59,6 +59,18 @@ UKF::UKF() {
 
   // Initialize the state covariance matrix as the Identity matrix
   P_ = MatrixXd::Identity(5, 5);
+
+  // Set state dimension
+  int n_x_ = 5;
+
+  // Set augmented dimension
+  int n_aug_ = 7;
+
+  // Define spreading parameter
+  double lambda_ = 3 - n_aug_;
+
+  // Set Sigma points matrix
+  Xsig_pred_ = MatrixXd(n_aug_, 2 * n_aug_ + 1);
 }
 
 UKF::~UKF() {}
@@ -123,14 +135,34 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
  * measurement and this one.
  */
 void UKF::Prediction(double delta_t) {
-  /**
-  TODO:
-
-  Complete this function! Estimate the object's location. Modify the state
-  vector, x_. Predict sigma points, the state, and the state covariance matrix.
+  /*
+   * 1. Generates sigma points
   */
 
+  // Create augmented mean vector
+  VectorXd x_aug = VectorXd(n_aug_);
+  x_aug.fill(0.0);
+  x_aug.head(n_x_) = x_;
 
+  // Create augmented state covariance
+  MatrixXd P_aug = MatrixXd(n_aug_, n_aug_);
+  P_aug.fill(0.0);
+  P_aug.topLeftCorner(n_x_, n_x_) = P_;
+  P_aug(n_aug_-2,n_aug_-2) = std_a_*std_a_;
+  P_aug(n_aug_-1,n_aug_-1) = std_yawdd_*std_yawdd_;
+
+  // Create sigma point matrix
+  MatrixXd Xsig_aug = MatrixXd(n_aug_, 2 * n_aug_ + 1);
+  Xsig_aug.fill(0.0);
+
+  MatrixXd A = MatrixXd(n_aug_, n_aug_);
+  A = P_aug.llt().matrixL();
+
+  Xsig_aug.col(0) = x_aug;
+  for(int i = 0; i < 2 * n_aug_ + 1; i++) {
+    Xsig_aug.col(i+1) = x_aug + sqrt(lambda_ + n_x_)*A.col(i);
+    Xsig_aug.col(i+1+n_aug_) = x_aug - sqrt(lambda_ + n_x_)*A.col(i);
+  }
 }
 
 /**
