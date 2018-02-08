@@ -56,6 +56,9 @@ UKF::UKF() {
   */
 
   is_initialized_ = false;
+
+  // Initialize the state covariance matrix as the Identity matrix
+  P_ = MatrixXd::Identity(5, 5);
 }
 
 UKF::~UKF() {}
@@ -65,6 +68,11 @@ UKF::~UKF() {}
  * either radar or laser.
  */
 void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
+
+  /*****************************************************************************
+   *  Initialization
+   ****************************************************************************/
+
   if(!is_initialized_) {
 
     if(meas_package.sensor_type_ == MeasurementPackage::LASER) {
@@ -90,6 +98,23 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     is_initialized_ = true;
     return;
   }
+
+  /*****************************************************************************
+   *  Prediction
+   ****************************************************************************/
+
+   // Compute delat_t and update previous measurement time
+   double delta_t = (meas_package.timestamp_ - time_us_) / 1000000.0; // in seconds
+   time_us_ = meas_package.timestamp_;
+
+   // Call prediction process
+   Prediction(delta_t);
+
+   /*****************************************************************************
+    *  Update
+    ****************************************************************************/
+
+   // TODO
 }
 
 /**
@@ -104,6 +129,8 @@ void UKF::Prediction(double delta_t) {
   Complete this function! Estimate the object's location. Modify the state
   vector, x_. Predict sigma points, the state, and the state covariance matrix.
   */
+
+
 }
 
 /**
