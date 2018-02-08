@@ -126,7 +126,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
    }
 
    if(meas_package.sensor_type_ == MeasurementPackage::RADAR) {
-     //UpdateRadar(meas_package);
+     UpdateRadar(meas_package);
    }
 }
 
@@ -296,6 +296,6 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
   K = Tc * S.inverse();
 
   // Update state mean and covariance matrix
-  x_ += K * (meas_package.raw_measurements_ - z_pred);
-  P_ += P_ - K * S * K.inverse();
+  x_ = x_ +  K * (meas_package.raw_measurements_ - z_pred);
+  P_ = P_ - K * S * K.transpose();
 }
