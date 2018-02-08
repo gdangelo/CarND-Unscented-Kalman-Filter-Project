@@ -211,7 +211,14 @@ void UKF::Prediction(double delta_t) {
 
   // Predict state covariance matrix
   for(int i = 0; i < 2 * n_aug_ + 1; i++) {
-    P_ += weights_(i) * (Xsig_pred_.col(i) - x_) * (Xsig_pred_.col(i) - x_).transpose();
+    // state difference
+    VectorXd x_diff = Xsig_pred_.col(i) - x_;
+
+    //angle normalization
+    while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
+    while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
+
+    P_ += weights_(i) * x_diff * x_diff.transpose();
   }
 }
 
