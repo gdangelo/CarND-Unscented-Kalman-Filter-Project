@@ -13,10 +13,10 @@ using std::vector;
  */
 UKF::UKF() {
   // if this is false, laser measurements will be ignored (except during init)
-  use_laser_ = true;
+  use_laser_ = false;
 
   // if this is false, radar measurements will be ignored (except during init)
-  use_radar_ = false;
+  use_radar_ = true;
 
   // Set state dimension
   n_x_ = 5;
@@ -96,9 +96,6 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
      x_.fill(0.0);
      x_(0) = meas_package.raw_measurements_(0); //px
      x_(1) = meas_package.raw_measurements_(1); //py
-     x_(2) = 10;
-     x_(3) = 0;
-     x_(4) = 0.5;
     }
 
     if(meas_package.sensor_type_ == MeasurementPackage::RADAR) {
@@ -109,9 +106,6 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
      x_.fill(0.0);
      x_(0) = ro*cos(theta); //px
      x_(1) = ro*sin(theta); //py
-     x_(2) = 10;
-     x_(3) = 0;
-     x_(4) = 0.5;
     }
 
     time_us_ = meas_package.timestamp_;
@@ -357,7 +351,6 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
     double py = Xsig_pred_(1, i);
     double v = Xsig_pred_(2, i);
     double phi = Xsig_pred_(3, i);
-    double phi_dot = Xsig_pred_(4, i);
 
     double ro = sqrt(px*px + py*py);
     double theta = atan2(py, px);
@@ -375,7 +368,7 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
   // Calculate mean predicted measurement
   z_pred.fill(0.0);
   for(int i = 0; i < 2 * n_aug_ + 1; i++) {
-    z_pred += weights_(i) * Zsig.col(i);
+    z_pred = z_pred + weights_(i) * Zsig.col(i);
   }
 
   // Calculate innovation covariance matrix S
@@ -386,7 +379,7 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
     // angle normalization
     NormalizeAngle(&(z_diff(1)));
 
-    S += weights_(i) * z_diff * z_diff.transpose();
+    S = S + weights_(i) * z_diff * z_diff.transpose();
   }
 
   MatrixXd R = MatrixXd(n_z_,n_z_);
@@ -394,26 +387,35 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
   R(1, 1) = std_radphi_*std_radphi_;
   R(2, 2) = std_radrd_*std_radrd_;
 
-  S += R;
-
-  cout << "S:\n" << S << "\n" << endl;
+  S = S + R;
 
   // Calculate Cross-correlation Matrix
   MatrixXd Tc = MatrixXd(n_x_,n_z_);
+  Tc.fill(0.0);
   for(int i = 0; i < 2 * n_aug_ + 1; i++) {
-    Tc += weights_(i) * (Xsig_pred_.col(i) - x_) * (Zsig.col(i) - z_pred).transpose();
+    // residual
+    VectorXd z_diff = Zsig.col(i) - z_pred;
+    // angle normalization
+    NormalizeAngle(&(z_diff(1)));
+
+    // state difference
+    VectorXd x_diff = Xsig_pred_.col(i) - x_;
+    // angle normalization
+    NormalizeAngle(&(x_diff(3)));
+
+    Tc = Tc + weights_(i) * x_diff * z_diff.transpose();
   }
 
-  cout << "Tc:\n" << Tc << "\n" << endl;
-
   // Calculate Kalman gain
-  MatrixXd K = MatrixXd(n_x_,n_z_);
-  K = Tc * S.inverse();
+  MatrixXd K = Tc * S.inverse();
 
-  cout << "K:\n" << K << "\n" << endl;
+  // residual
+  VectorXd z_diff = meas_package.raw_measurements_ - z_pred;
+  // angle normalization
+  NormalizeAngle(&(z_diff(1)));
 
   // Update state mean and covariance matrix
-  x_ = x_ +  K * (meas_package.raw_measurements_ - z_pred);
+  x_ = x_ +  K * z_diff;
   P_ = P_ - K * S * K.transpose();
 
   cout << "x_:\n" << x_ << "\n" << endl;
