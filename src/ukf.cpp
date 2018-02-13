@@ -13,7 +13,7 @@ using std::vector;
  */
 UKF::UKF() {
   // if this is false, laser measurements will be ignored (except during init)
-  use_laser_ = false;
+  use_laser_ = true;
 
   // if this is false, radar measurements will be ignored (except during init)
   use_radar_ = true;
@@ -67,6 +67,13 @@ UKF::UKF() {
 
   // Set weights
   weights_ = VectorXd(2 * n_aug_ + 1);
+
+  double weight_0 = lambda_ / (lambda_ + n_aug_);
+  weights_(0) = weight_0;
+  for(int i = 1; i < 2 * n_aug_ + 1; i++) {
+    double weight = 0.5 / (n_aug_ + lambda_);
+    weights_(i) = weight;
+  }
 }
 
 UKF::~UKF() {}
@@ -241,14 +248,6 @@ void UKF::Prediction(double delta_t) {
   /*****************************************************************************
    *  Predict state mean and state covariance matrix
    ****************************************************************************/
-
-  // Set weights
-  double weight_0 = lambda_ / (lambda_ + n_aug_);
-  weights_(0) = weight_0;
-  for(int i = 1; i < 2 * n_aug_ + 1; i++) {
-    double weight = 0.5 / (n_aug_ + lambda_);
-    weights_(i) = weight;
-  }
 
   // Predict state mean
   VectorXd x_pred = VectorXd(n_x_);
