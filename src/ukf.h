@@ -34,6 +34,15 @@ public:
   ///* predicted sigma points matrix
   MatrixXd Xsig_pred_;
 
+  ///* sigma points in measurement space matrix
+  MatrixXd Zsig_;
+
+  ///* mean predicted measurement vector
+  VectorXd z_pred_;
+
+  ///* measurement covariance matrix
+  MatrixXd S_;
+
   ///* time when the state is true, in us
   long long time_us_;
 
@@ -76,6 +85,12 @@ public:
   ///* NIS values for each processed laser measurement
   std::vector<double> NIS_Laser_;
 
+  ///* Measurement noise covariance matrix for Lidar
+  MatrixXd R_Laser_;
+
+  ///* Measurement noise covariance matrix for Radar
+  MatrixXd R_Radar_;
+
 
   /**
    * Constructor
@@ -91,11 +106,9 @@ public:
    *  Compute NIS
    *  @param:
    *    - z, measurement vector at time k+1
-   *    - z_pred, predicted measurement vector for time k+1
-   *    - S, measurement covariance matrix
    *    - sensor_type, sensor type (RADAR or LASER)
    */
-   void ComputeNIS(VectorXd z, VectorXd z_pred, MatrixXd S, MeasurementPackage::SensorType sensor_type);
+   void ComputeNIS(VectorXd z, MeasurementPackage::SensorType sensor_type);
 
   /**
    *  Angle normalization to [-Pi, Pi]
@@ -133,6 +146,29 @@ public:
    * @param delta_t Time between k and k+1 in s
    */
   void Prediction(double delta_t);
+
+  /**
+   * Transform RADAR sigma points into measurement space, calculate the mean
+   * predicted measurement vector, and calculate the innovation covariance matrix
+   * @param n_z_ measurement dimension
+   */
+  void PredictRadarMeasurement(int n_z_);
+
+  /**
+   * Transform LIDAR sigma points into measurement space, calculate the mean
+   * predicted measurement vector, and calculate the innovation covariance matrix
+   * @param n_z_ measurement dimension
+   */
+  void PredictLidarMeasurement(int n_z_);
+
+  /**
+   * Update state mean and covariance matrix and compute NIS
+   * @param:
+   *  - n_z_, measurement dimension
+   *  - z, measurement vector
+   *  - sensor_type, sensor type (RADAR or LASER)
+   */
+  void UpdateUKF(int n_z_, VectorXd z, MeasurementPackage::SensorType sensor_type);
 
   /**
    * Updates the state and the state covariance matrix using a laser measurement
