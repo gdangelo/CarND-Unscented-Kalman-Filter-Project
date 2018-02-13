@@ -28,6 +28,9 @@ public:
   ///* state covariance matrix
   MatrixXd P_;
 
+  ///* augmented sigma points matrix
+  MatrixXd Xsig_aug_;
+
   ///* predicted sigma points matrix
   MatrixXd Xsig_pred_;
 
@@ -105,6 +108,24 @@ public:
    * @param meas_package The latest measurement data of either radar or laser
    */
   void ProcessMeasurement(MeasurementPackage meas_package);
+
+  /**
+   * GenerateAugmentedSigmaPoints Generates the sigma points for prediction
+   * @param None
+   */
+  void GenerateAugmentedSigmaPoints();
+
+  /**
+   * PredictSigmaPoints Predicts sigma points
+   * @param delta_t Time between k and k+1 in s
+   */
+  void PredictSigmaPoints(double delta_t);
+
+  /**
+   * PredictStateMeanAndCovariance Predicts the state mean and covariance
+   * @param None
+   */
+  void PredictStateMeanAndCovariance();
 
   /**
    * Prediction Predicts sigma points, the state, and the state covariance
