@@ -67,6 +67,12 @@ public:
   ///* Sigma point spreading parameter
   double lambda_;
 
+  ///* NIS values for each processed radar measurement
+  std::vector<double> NIS_Radar_;
+
+  ///* NIS values for each processed laser measurement
+  std::vector<double> NIS_Laser_;
+
 
   /**
    * Constructor
@@ -77,6 +83,16 @@ public:
    * Destructor
    */
   virtual ~UKF();
+
+  /**
+   *  Compute NIS
+   *  @param:
+   *    - z, measurement vector at time k+1
+   *    - z_pred, predicted measurement vector for time k+1
+   *    - S, measurement covariance matrix
+   *    - sensor_type, sensor type (RADAR or LASER)
+   */
+   void ComputeNIS(VectorXd z, VectorXd z_pred, MatrixXd S, MeasurementPackage::SensorType sensor_type);
 
   /**
    *  Angle normalization to [-Pi, Pi]

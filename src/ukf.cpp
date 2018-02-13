@@ -16,7 +16,7 @@ UKF::UKF() {
   use_laser_ = true;
 
   // if this is false, radar measurements will be ignored (except during init)
-  use_radar_ = true;
+  use_radar_ = false;
 
   // Set state dimension
   n_x_ = 5;
@@ -77,6 +77,20 @@ UKF::UKF() {
 }
 
 UKF::~UKF() {}
+
+void UKF::ComputeNIS(VectorXd z, VectorXd z_pred, MatrixXd S, MeasurementPackage::SensorType sensor_type) {
+  double epsilon;
+
+  VectorXd z_diff = z - z_pred;
+  epsilon = z_diff.transpose() * S.inverse() * z_diff;
+
+  if(sensor_type == MeasurementPackage::LASER) {
+    NIS_Laser_.push_back(epsilon);
+  }
+  if(sensor_type == MeasurementPackage::RADAR) {
+    NIS_Radar_.push_back(epsilon);
+  }
+}
 
 /**
  *  Angle normalization to [-Pi, Pi]
@@ -335,8 +349,12 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
 
   // Update state mean and covariance matrix
   x_ = x_ +  K * (meas_package.raw_measurements_ - z_pred);
-  cout << "x_:\n" << x_ << "\n" << endl;
   P_ = P_ - K * S * K.transpose();
+
+  // Compute and store NIS for this step
+  ComputeNIS(meas_package.raw_measurements_, z_pred, S, MeasurementPackage::LASER);
+
+  cout << "x_:\n" << x_ << "\n" << endl;
   cout << "P_:\n" << P_ << "\n" << endl;
 }
 
@@ -430,6 +448,9 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
   // Update state mean and covariance matrix
   x_ = x_ +  K * z_diff;
   P_ = P_ - K * S * K.transpose();
+
+  // Compute and store NIS for this step
+  ComputeNIS(meas_package.raw_measurements_, z_pred, S, MeasurementPackage::RADAR);
 
   cout << "x_:\n" << x_ << "\n" << endl;
   cout << "P_:\n" << P_ << "\n" << endl;
