@@ -79,11 +79,11 @@ public:
   ///* Sigma point spreading parameter
   double lambda_;
 
-  ///* NIS values for each processed radar measurement
-  std::vector<double> NIS_Radar_;
+  ///* NIS value computed for the last radar measurement processed
+  double NIS_Radar_;
 
-  ///* NIS values for each processed laser measurement
-  std::vector<double> NIS_Laser_;
+  ///* NIS value computed for the last laser measurement processed
+  double NIS_Laser_;
 
   ///* Measurement noise covariance matrix for Lidar
   MatrixXd R_Laser_;
@@ -112,9 +112,9 @@ public:
 
   /**
    *  Angle normalization to [-Pi, Pi]
-   *  @param ang The angle to normalize
+   *  @param angle The angle to normalize
    */
-  void NormalizeAngle(double *ang);
+  void NormalizeAngle(double *angle);
 
   /**
    * ProcessMeasurement
@@ -181,6 +181,12 @@ public:
    * @param meas_package The measurement at k+1
    */
   void UpdateRadar(MeasurementPackage meas_package);
+
+  /**
+   * Print state mean vector and state covariance matrix
+   * @param None
+   */
+  void PrintStateMeanAndCovariance();
 };
 
 #endif /* UKF_H */
