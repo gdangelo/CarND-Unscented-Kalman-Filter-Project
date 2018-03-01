@@ -221,8 +221,8 @@ void UKF::GenerateAugmentedSigmaPoints() {
   MatrixXd P_aug = MatrixXd(n_aug_, n_aug_);
   P_aug.fill(0.0);
   P_aug.topLeftCorner(n_x_, n_x_) = P_;
-  P_aug(5, 5) = std_a_*std_a_;
-	P_aug(6, 6) = std_yawdd_*std_yawdd_;
+  P_aug(n_x_, n_x_) = std_a_*std_a_;
+	P_aug(n_x_ + 1, n_x_ + 1) = std_yawdd_*std_yawdd_;
 
   // Create square root matrix
   MatrixXd A = P_aug.llt().matrixL();
