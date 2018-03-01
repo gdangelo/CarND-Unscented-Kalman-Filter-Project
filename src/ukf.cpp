@@ -337,11 +337,7 @@ void UKF::PredictLidarMeasurement(int n_z_) {
   S_ = MatrixXd(n_z_, n_z_);
 
   // Transform sigma points into measurement space
-  for(int i = 0; i < n_sig_; i++) {
-    double px = Xsig_pred_(0, i);
-    double py = Xsig_pred_(1, i);
-    Zsig_.col(i) << px, py;
-  }
+  Zsig_ = Xsig_pred_.block(0, 0, n_z_, n_sig_);
 
   // Calculate mean predicted measurement
   z_pred_.fill(0.0);
