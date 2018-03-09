@@ -44,7 +44,7 @@ This repository includes two files that can be used to set up and install [uWebS
   * Mac: same deal as make - [install Xcode command line tools](https://developer.apple.com/xcode/features/)
   * Windows: recommend using [MinGW](http://www.mingw.org/)
   
-Once all the dependencies has been installed **clone** the project:
+Once all the dependencies have been installed **clone** the project:
 
 ```sh
 git clone https://github.com/gdangelo/CarND-Unscented-Kalman-Filter-Project/
